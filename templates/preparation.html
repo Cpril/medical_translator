@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>就医准备 - Mendy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .quick-btn {
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .translate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .translate-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .translate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .result-box.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-content {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .back-btn {
+            width: 100%;
+            padding: 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        
+        .back-btn:hover {
+            background: #5a6268;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 20px;
+            display: none;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>就医准备 Hospital Preparation</h1>
+        </div>
+        
+        <div class="input-group">
+            <textarea id="symptomText" placeholder="Describe your symptoms... 描述您的症状..."></textarea>
+            <div class="quick-questions">
+                <button class="quick-btn" onclick="setSymptom('我发烧了，38度')">我发烧了 Fever</button>
+                <button class="quick-btn" onclick="setSymptom('我肚子疼')">我肚子疼 Stomach pain</button>
+                <button class="quick-btn" onclick="setSymptom('我头痛')">我头痛 Headache</button>
+                <button class="quick-btn" onclick="setSymptom('我咳嗽')">我咳嗽 Cough</button>
+            </div>
+            <button class="translate-btn" id="adviceBtn" onclick="getAdvice()">获取建议 Get Advice</button>
+        </div>
+        
+        <div class="error" id="errorBox"></div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            分析中... Analyzing...
+        </div>
+        
+        <div id="adviceBox" class="result-box">
+            <div class="result-content" id="advice"></div>
+        </div>
+        
+        <a href="/" class="back-btn">返回首页 Back to Home</a>
+    </div>
+    
+    <script>
+        function setSymptom(text) {
+            document.getElementById('symptomText').value = text;
+        }
+        
+        async function getAdvice() {
+            const text = document.getElementById('symptomText').value;
+            if (!text.trim()) {
+                showError('Please describe your symptoms!');
+                return;
+            }
+            
+            const btn = document.getElementById('adviceBtn');
+            btn.disabled = true;
+            
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('adviceBox').classList.remove('active');
+            document.getElementById('errorBox').classList.remove('active');
+            
+            try {
+                const response = await fetch('/api/advice', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({symptom: text})
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Advice request failed');
+                }
+                
+                const data = await response.json();
+                
+                document.getElementById('advice').textContent = data.advice;
+                
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('adviceBox').classList.add('active');
+            } catch (error) {
+                document.getElementById('loading').classList.remove('active');
+                showError('Error getting advice. Please check your API key and try again.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        
+        function showError(message) {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.textContent = message;
+            errorBox.classList.add('active');
+        }
+    </script>
+</body>
+</html>
