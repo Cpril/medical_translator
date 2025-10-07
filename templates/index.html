@@ -1,23 +1,17 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mendy - 医疗翻译助手</title>
+    <title>Mendy - Medical Translator</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
         .container {
             max-width: 500px;
             margin: 0 auto;
@@ -26,12 +20,7 @@
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
+        .header { text-align: center; margin-bottom: 30px; }
         .avatar {
             width: 80px;
             height: 80px;
@@ -43,18 +32,46 @@
             justify-content: center;
             font-size: 40px;
         }
-        
-        h1 {
+        h1 { color: #333; font-size: 24px; margin-bottom: 10px; }
+        .subtitle { color: #666; font-size: 16px; margin-bottom: 30px; }
+        .language-label {
+            display: block;
             color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
         }
-        
-        .subtitle {
+        .language-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .lang-btn {
+            padding: 15px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
             color: #666;
-            font-size: 16px;
         }
-        
+        .lang-btn:hover { border-color: #667eea; transform: translateY(-2px); }
+        .lang-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .lang-flag { font-size: 24px; display: block; margin-bottom: 5px; }
+        .action-buttons { display: none; }
+        .action-buttons.active { display: block; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         .btn {
             width: 100%;
             padding: 18px;
@@ -71,21 +88,9 @@
             display: block;
             text-align: center;
         }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        small {
-            display: block;
-            margin-top: 5px;
-            font-weight: 400;
-        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-secondary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        small { display: block; margin-top: 5px; font-weight: 400; }
     </style>
 </head>
 <body>
@@ -93,16 +98,66 @@
         <div class="header">
             <div class="avatar">🏥</div>
             <h1>Hi, I'm Mendy</h1>
-            <p class="subtitle">你的医疗翻译助手<br>Your Medical Translator</p>
+            <p class="subtitle">Your Medical Translator</p>
         </div>
-        <a href="/realtime" class="btn">
-            🔄 I'm at the hospital and need realtime translation<br>
-            <small>我在医院需要实时翻译</small>
-        </a>
-        <a href="/preparation" class="btn btn-secondary">
-            📋 I need to go to the hospital<br>
-            <small>我需要去医院</small>
-        </a>
+        
+        <label class="language-label">Select Your Language / 选择语言 / اپنی زبان منتخب کریں / Paw wo kasa</label>
+        <div class="language-buttons">
+            <button class="lang-btn" onclick="selectLanguage('chinese')">
+                <span class="lang-flag">🇨🇳</span>
+                中文<br>Chinese
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('urdu')">
+                <span class="lang-flag">🇵🇰</span>
+                اردو<br>Urdu
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('twi')">
+                <span class="lang-flag">🇬🇭</span>
+                Twi<br>Akan
+            </button>
+        </div>
+        
+        <div id="chinese-actions" class="action-buttons">
+            <a href="/realtime?lang=chinese" class="btn">
+                🔄 I'm at the hospital and need realtime translation<br>
+                <small>我在医院需要实时翻译</small>
+            </a>
+            <a href="/preparation?lang=chinese" class="btn btn-secondary">
+                📋 I need to go to the hospital<br>
+                <small>我需要去医院</small>
+            </a>
+        </div>
+        
+        <div id="urdu-actions" class="action-buttons">
+            <a href="/realtime?lang=urdu" class="btn">
+                🔄 I'm at the hospital and need realtime translation<br>
+                <small>مجھے ہسپتال میں فوری ترجمہ کی ضرورت ہے</small>
+            </a>
+            <a href="/preparation?lang=urdu" class="btn btn-secondary">
+                📋 I need to go to the hospital<br>
+                <small>مجھے ہسپتال جانے کی ضرورت ہے</small>
+            </a>
+        </div>
+        
+        <div id="twi-actions" class="action-buttons">
+            <a href="/realtime?lang=twi" class="btn">
+                🔄 I'm at the hospital and need realtime translation<br>
+                <small>Mewɔ ayaresabea na mehia nkyerɛaseɛ ntɛm</small>
+            </a>
+            <a href="/preparation?lang=twi" class="btn btn-secondary">
+                📋 I need to go to the hospital<br>
+                <small>Ɛsɛ sɛ mekɔ ayaresabea</small>
+            </a>
+        </div>
     </div>
+    
+    <script>
+        function selectLanguage(lang) {
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.lang-btn').classList.add('active');
+            document.querySelectorAll('.action-buttons').forEach(div => div.classList.remove('active'));
+            document.getElementById(lang + '-actions').classList.add('active');
+        }
+    </script>
 </body>
 </html>
