@@ -41,6 +41,14 @@ LANGUAGE_CONFIG = {
         'translating': '翻译中... Translating...',
         'analyzing': '分析中... Analyzing...',
         'target_lang': 'Chinese',
+        'patient_quick_questions': [
+            '我有药物过敏',
+            '我有保险',
+            '我头痛',
+            '我发烧'
+        ],
+        'direction_hospital_to_patient_label': '医院（英文）→ 患者（中文）',
+        'direction_patient_to_hospital_label': '患者（中文）→ 医院（英文）',
         'speaker': 'Chinese-speaking'
     },
     'urdu': {
@@ -56,6 +64,14 @@ LANGUAGE_CONFIG = {
         'translating': 'ترجمہ ہو رہا ہے... Translating...',
         'analyzing': 'تجزیہ ہو رہا ہے... Analyzing...',
         'target_lang': 'Urdu',
+        'patient_quick_questions': [
+            'مجھے دوا سے الرجی ہے',
+            'میرے پاس انشورنس ہے',
+            'میرے سر میں درد ہے',
+            'مجھے بخار ہے'
+        ],
+        'direction_hospital_to_patient_label': 'ہسپتال (انگریزی) → مریض (اردو)',
+        'direction_patient_to_hospital_label': 'مریض (اردو) → ہسپتال (انگریزی)',
         'speaker': 'Urdu-speaking'
     },
     'twi': {
@@ -71,6 +87,14 @@ LANGUAGE_CONFIG = {
         'translating': 'Yɛrekyerɛ aseɛ... Translating...',
         'analyzing': 'Yɛrehwɛ mu... Analyzing...',
         'target_lang': 'Twi (Akan language from Ghana)',
+        'patient_quick_questions': [
+            'Mewɔ aduro atiridie',
+            'Mewɔ insurance',
+            'Me tire ye me ya',
+            'Mewɔ atiridiì'
+        ],
+        'direction_hospital_to_patient_label': 'Ayaresabea (English) → Twi',
+        'direction_patient_to_hospital_label': 'Twi → Ayaresabea (English)',
         'speaker': 'Twi-speaking'
     }
 }
@@ -100,13 +124,16 @@ def translate():
     data = request.json
     text = data.get('text', '')
     lang = data.get('language', 'chinese')
+    # direction: 'hospital_to_patient' (English -> target) or 'patient_to_hospital' (target -> English)
+    direction = data.get('direction', 'hospital_to_patient')
     
     if not text:
         return jsonify({'error': 'No text provided'}), 400
     
     config = LANGUAGE_CONFIG.get(lang, LANGUAGE_CONFIG['chinese'])
     
-    prompt = f"""You are a medical translator helping {config['speaker']} patients at an English-speaking hospital.
+    if direction == 'hospital_to_patient':
+        prompt = f"""You are a medical translator helping {config['speaker']} patients at an English-speaking hospital.
 
 Translate this English medical phrase to {config['target_lang']} and provide helpful context:
 "{text}"
@@ -123,7 +150,26 @@ RESPONSES:
 [In {config['target_lang']}: Provide 2-3 possible responses they can give, with English translations]
 
 
-Do not include pronunciation. Keep it concise and practical for a hospital setting."""
+Show No pronunciation. Keep it practical and concise, within 50 words for context and responses."""
+    else:
+        # patient_to_hospital: translate from patient's language -> English and give context in patient's language
+        prompt = f"""You are a medical translator helping {config['speaker']} patients communicate in an English-speaking hospital.
+
+Translate this {config['target_lang']} phrase to English and provide helpful context in {config['target_lang']}:
+"{text}"
+
+Provide your response in this exact format:
+
+TRANSLATION:
+[Direct English translation]
+
+CONTEXT:
+[In {config['target_lang']}: Explain the situation and how their answer might affect their experience in hospital]
+
+RESPONSES:
+[In Both English and {config['target_lang']}: Provide 2-3 suggestions they might also say to the hospital staff related to what they said]
+
+Show no pronunciation. Keep it concise, within 50 words for context."""
 
     try:
         print(f"Translating to {lang}: {text}")
@@ -185,7 +231,7 @@ Provide advice in {config['target_lang']} about:
 4. What to bring (insurance, ID, etc.)
 5. Any costs they might incur
 
-Keep it practical, clear, and reassuring. Use {config['target_lang']}, Do not show pronunciation."""
+Keep it practical and concise, within 200 words. Use {config['target_lang']}, No pronunciation."""
 
     try:
         print(f"Getting advice in {lang}: {symptom}")
@@ -301,6 +347,13 @@ if __name__ == '__main__':
         .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .btn-secondary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
         small { display: block; margin-top: 5px; font-weight: 400; }
+        .disclaimer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -359,6 +412,7 @@ if __name__ == '__main__':
                 <small>Ɛsɛ sɛ mekɔ ayaresabea</small>
             </a>
         </div>
+        <p class="disclaimer">Mendy does not collect any personal information. Do not input sensitive information.</p>
     </div>
     
     <script>
@@ -432,6 +486,23 @@ if __name__ == '__main__':
             cursor: pointer;
             margin-top: 10px;
         }
+        .direction-row { display:flex; gap:8px; margin-bottom:12px; }
+        .direction-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            background: #f0f0f0;
+            color: #333;
+            transition: all 0.2s;
+        }
+        .direction-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
         .btn:hover { opacity: 0.9; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .result-box {
@@ -493,14 +564,13 @@ if __name__ == '__main__':
             <h1>{{ config.realtime_title }}</h1>
         </div>
         
-        <textarea id="inputText" placeholder="{{ config.input_placeholder }}"></textarea>
-        <div class="quick-questions">
-            <button class="quick-btn" onclick="setQuickQuestion('Do you have insurance?')">Do you have insurance?</button>
-            <button class="quick-btn" onclick="setQuickQuestion('What brings you in today?')">What brings you in?</button>
-            <button class="quick-btn" onclick="setQuickQuestion('Any allergies?')">Any allergies?</button>
-            <button class="quick-btn" onclick="setQuickQuestion('When did the symptoms start?')">When did symptoms start?</button>
+        <div class="direction-row">
+            <button id="dirHospital" class="direction-btn active" onclick="setDirection('hospital_to_patient')">{{ config.direction_hospital_to_patient_label }}</button>
+            <button id="dirPatient" class="direction-btn" onclick="setDirection('patient_to_hospital')">{{ config.direction_patient_to_hospital_label }}</button>
         </div>
-        <button class="btn" id="translateBtn" onclick="translateText()">{{ config.translate_btn }}</button>
+        <textarea id="inputText" placeholder="{{ config.input_placeholder }}"></textarea>
+        <div id="quickQuestions" class="quick-questions"></div>
+    <button class="btn" id="translateBtn" onclick="translateText()">{{ config.translate_btn }}</button>
         
         <div class="error" id="errorBox"></div>
         
@@ -519,7 +589,7 @@ if __name__ == '__main__':
                 <div class="result-content" id="context"></div>
             </div>
             <div class="result-section">
-                <div class="result-title">💬 Possible Responses</div>
+                <div class="result-title" id="responsesTitle">💬 Possible Responses</div>
                 <div class="result-content" id="responses"></div>
             </div>
         </div>
@@ -529,6 +599,53 @@ if __name__ == '__main__':
     
     <script>
         const currentLanguage = "{{ language }}";
+        let currentDirection = 'hospital_to_patient';
+        // patient quick questions provided via Jinja into JS
+        const patientQuickQuestions = {{ config.patient_quick_questions | tojson }};
+
+        // default hospital quick questions (English)
+        const hospitalQuickQuestions = [
+            'Do you have insurance?',
+            'What brings you in today?',
+            'Any allergies?',
+            'When did the symptoms start?'
+        ];
+
+        function renderQuickQuestions() {
+            const container = document.getElementById('quickQuestions');
+            container.innerHTML = '';
+            const list = currentDirection === 'patient_to_hospital' ? patientQuickQuestions : hospitalQuickQuestions;
+            list.forEach(q => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-btn';
+                btn.type = 'button';
+                btn.textContent = q;
+                btn.onclick = () => setQuickQuestion(q);
+                container.appendChild(btn);
+            });
+        }
+
+        function setDirection(dir) {
+            currentDirection = dir;
+            const hospitalBtn = document.getElementById('dirHospital');
+            const patientBtn = document.getElementById('dirPatient');
+            if (dir === 'hospital_to_patient') {
+                hospitalBtn.classList.add('active');
+                patientBtn.classList.remove('active');
+                // render english quick questions
+                renderQuickQuestions();
+            } else {
+                patientBtn.classList.add('active');
+                hospitalBtn.classList.remove('active');
+                // render patient-language quick questions
+                renderQuickQuestions();
+            }
+            // Update responses title depending on direction
+            const responsesTitle = document.getElementById('responsesTitle');
+            if (responsesTitle) {
+                responsesTitle.textContent = dir === 'patient_to_hospital' ? '💬 You Can Expand On' : '💬 Possible Responses';
+            }
+        }
         
         function setQuickQuestion(text) {
             document.getElementById('inputText').value = text;
@@ -552,7 +669,7 @@ if __name__ == '__main__':
                 const response = await fetch('/api/translate', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text: text, language: currentLanguage})
+                    body: JSON.stringify({text: text, language: currentLanguage, direction: currentDirection})
                 });
                 
                 if (!response.ok) throw new Error('Translation failed');
@@ -578,6 +695,18 @@ if __name__ == '__main__':
             errorBox.textContent = message;
             errorBox.classList.add('active');
         }
+        // Initialize quick questions on load (hospital -> patient default)
+        window.addEventListener('DOMContentLoaded', function() {
+            // ensure default button state
+            document.getElementById('dirHospital').classList.add('active');
+            document.getElementById('dirPatient').classList.remove('active');
+            renderQuickQuestions();
+            // ensure responses title matches default direction
+            const responsesTitleInit = document.getElementById('responsesTitle');
+            if (responsesTitleInit) {
+                responsesTitleInit.textContent = '💬 Possible Responses';
+            }
+        });
     </script>
 </body>
 </html>''')
