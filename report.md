@@ -42,7 +42,12 @@ Limitations:
 - Right now only support 3 languages. 
 
 ## User Centered Design: 
-### Prototype, User Testing, & Iterations
+### Prototype
+[![Chinese Demo]](demo/DemoChinese.mp4)
+[![Twi Demo]](demo/DemoTwi.mp4)
+[![Urdu Demo]](demo/DemoUrdu.mp4)
+
+### User Testing, & Iterations
 - Our first prototype includes features: realtime translation (only one-directional), hospital preperation (no structured output). 
 - As we conducted user testing, our model preformed well in accuracy and comprehensiveness, but also revealed many **problems**: 
 
